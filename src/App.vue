@@ -37,13 +37,8 @@
         </div>
       </div>
       <div class="list">
-        <div class="list-header">
-          <div class="list-header__item price">Prize(USD)</div>
-          <div class="list-header__item size">Size</div>
-          <div class="list-header__item total">Total</div>
-        </div>
         <div class="quote-list ">
-          <div class="quote-row buy" v-for="(row, index) in buyQuote" :key="index" :class="{'new-data': row.status}">
+          <div class="quote-row buy" v-for="(row, index) in buyQuoteResult" :key="index" :class="{'new-data': row.status, 'hover-before': row.beforeHoverRow}" @mouseenter="buyRowMouseEvent(index)" @mouseleave="buyRowMouseEvent">
             <div class="quote-row__item price">{{ row.price |priceFormat }}</div>
             <div class="quote-row__item" :class="row.sizeChange">{{ row.size | priceFormat(0)}}</div>
             <div class="quote-row__item total">
@@ -72,7 +67,8 @@ export default {
       lastPrice: 0,
       gain: 0,
       maxSellTotal: 0,
-      maxBuyTotal: 0
+      maxBuyTotal: 0,
+      buyQuoteHoverIndex: null
     }
   },
   filters: {
@@ -104,9 +100,24 @@ export default {
         default:
           return ''
       }
+    },
+    buyQuoteResult () {
+      // 當buyQuote有列hover時
+      if (this.buyQuoteHoverIndex) {
+        const that = this
+        this.buyQuote.forEach((item, index) => {
+          if (index < that.buyQuoteHoverIndex) {
+            that.buyQuote[index].beforeHoverRow = true
+          }
+        })
+      }
+      return this.buyQuote
     }
   },
   methods: {
+    buyRowMouseEvent (hoverIndex) {
+      hoverIndex ? this.buyQuoteHoverIndex = hoverIndex : this.buyQuoteHoverIndex = null
+    },
     setCumulativeTotal(quoteInfo, type) {
       let result = quoteInfo.slice(0, 8).map((item, index) => {
         let cumulativeTotal = 0
@@ -270,6 +281,10 @@ $toolTipBg: #57626E;
               .tool-tip {
                 top: -24px
               }
+              background-color: #334573;
+              &~.quote-row {
+                background-color: rgba(51, 69, 115, 0.5);
+              }
             }
           }
           &.buy {
@@ -282,10 +297,14 @@ $toolTipBg: #57626E;
             .bar {
               background-color: rgba(16,186,104,.12);
             }
+            &.hover-before {
+              background-color: rgba(51, 69, 115, 0.5);
+            }
             &:hover {
               .tool-tip {
                 top: -5px;
               }
+              background-color: #334573;
             }
           }
           &__item {
